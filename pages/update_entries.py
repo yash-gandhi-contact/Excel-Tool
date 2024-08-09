@@ -1,6 +1,6 @@
 import pandas as pd
 import streamlit as st
-from utils.file_utils import download_excel
+from utils.file_utils import download_excel, download_csv
 from utils.data_utils import update_entries
 
 def read_file(file):
@@ -56,8 +56,13 @@ def render_update_entries_page():
             st.subheader("Updated Data")
             st.dataframe(updated_df, use_container_width=True)
 
-            # Option to download the updated DataFrame as an Excel file
-            download_excel(updated_df, "updated_data.xlsx")
+            # Option to download the updated DataFrame as an Excel or CSV file
+            file_type = st.radio("Select file format for download", ["Excel", "CSV"])
+
+            if file_type == "Excel":
+                download_excel(updated_df, "updated_data.xlsx")
+            else:
+                download_csv(updated_df, "updated_data.csv")
 
     elif not old_file:
         st.info("Please upload the Old File.")
