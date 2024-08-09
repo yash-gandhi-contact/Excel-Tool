@@ -5,20 +5,21 @@ import streamlit as st
 def read_files(uploaded_files):
     dataframes = []
     for uploaded_file in uploaded_files:
-        file_type = uploaded_file.name.split('.')[-1].lower()
-        if file_type == 'csv':
-            df = pd.read_csv(uploaded_file)
-        elif file_type in ['xlsx', 'xls']:
-            df = pd.read_excel(uploaded_file)
-        else:
-            st.error(f"Unsupported file type: {file_type}")
+        try:
+            if uploaded_file.name.endswith('.csv'):
+                df = pd.read_csv(uploaded_file)  # Read CSV file
+            else:
+                df = pd.read_excel(uploaded_file)  # Read Excel file
+            dataframes.append(df)
+        except Exception as e:
+            st.error(f"Error reading file {uploaded_file.name}: {str(e)}")
             continue
-        dataframes.append(df)
+
     if dataframes:
         combined_df = pd.concat(dataframes, ignore_index=True)
         return combined_df
     else:
-        return pd.DataFrame()  # Return an empty DataFrame if no valid files were processed
+        return pd.DataFrame()  # Return an empty DataFrame if no files were read successfully
 
 def download_excel(df, file_name):
     buffer = io.BytesIO()
