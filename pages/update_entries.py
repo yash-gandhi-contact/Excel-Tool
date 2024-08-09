@@ -1,24 +1,29 @@
 import pandas as pd
 import streamlit as st
-from utils.file_utils import read_excel_files, download_excel
+from utils.file_utils import download_excel
+from utils.data_utils import update_entries
 
-def read_file(file, file_type):
+def read_file(file):
     """
     Reads a file based on its type and returns a DataFrame.
 
     Args:
         file (UploadedFile): The uploaded file.
-        file_type (str): The type of the file ('csv' or 'excel').
 
     Returns:
-        pd.DataFrame: The DataFrame containing the file's data.
+        pd.DataFrame: The DataFrame containing the file's data or None if file type is unsupported.
     """
-    if file_type == 'csv':
-        return pd.read_csv(file)
-    elif file_type in ['xlsx', 'xls']:
-        return pd.read_excel(file)
-    else:
-        st.error(f"Unsupported file type: {file_type}")
+    file_type = file.name.split('.')[-1].lower()
+    try:
+        if file_type == 'csv':
+            return pd.read_csv(file)
+        elif file_type in ['xlsx', 'xls']:
+            return pd.read_excel(file)
+        else:
+            st.error(f"Unsupported file type: {file_type}")
+            return None
+    except Exception as e:
+        st.error(f"Error reading file: {e}")
         return None
 
 def render_update_entries_page():
@@ -40,13 +45,9 @@ def render_update_entries_page():
 
     # Display information if both files are uploaded
     if old_file and latest_file:
-        # Determine file types
-        old_file_type = old_file.name.split('.')[-1]
-        latest_file_type = latest_file.name.split('.')[-1]
-
         # Read the files into DataFrames
-        old_df = read_file(old_file, old_file_type)
-        latest_df = read_file(latest_file, latest_file_type)
+        old_df = read_file(old_file)
+        latest_df = read_file(latest_file)
 
         if old_df is not None and latest_df is not None:
             # Update entries in old_df based on latest_df
