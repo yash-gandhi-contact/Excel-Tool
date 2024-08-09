@@ -1,6 +1,6 @@
 import pandas as pd
 import streamlit as st
-from utils.file_utils import read_files, download_excel
+from utils.file_utils import read_excel_files, download_excel
 from utils.data_utils import update_entries
 
 def render_update_entries_page():
@@ -20,30 +20,38 @@ def render_update_entries_page():
     # Determine if replacement should occur
     replace_with_empty = replace_option == "Replace with empty values"
 
+    # Display information if both files are uploaded
     if old_excel and latest_excel:
-        # Determine file type and read accordingly
-        old_df = pd.read_excel(old_excel) if old_excel.name.endswith(('xlsx', 'xls')) else pd.read_csv(old_excel)
-        latest_df = pd.read_excel(latest_excel) if latest_excel.name.endswith(('xlsx', 'xls')) else pd.read_csv(latest_excel)
+        # Read the files
+        if old_excel.name.endswith('.csv'):
+            old_df = pd.read_csv(old_excel)
+        else:
+            old_df = pd.read_excel(old_excel)
+        
+        if latest_excel.name.endswith('.csv'):
+            latest_df = pd.read_csv(latest_excel)
+        else:
+            latest_df = pd.read_excel(latest_excel)
 
-        # Allow user to select the column to be used as the index
-        st.sidebar.write("Select Index Column")
-        index_column = st.sidebar.selectbox("Choose the primary key column", old_df.columns)
+        # Let user select index column
+        common_columns = list(set(old_df.columns).intersection(set(latest_df.columns)))
+        if not common_columns:
+            st.error("No common columns found between the two files.")
+            return
 
-        if index_column:
-            # Set the selected column as index
-            old_df.set_index(index_column, inplace=True)
-            latest_df.set_index(index_column, inplace=True)
+        index_column = st.sidebar.selectbox("Select column to use as index", common_columns)
 
-            # Update entries in old_df based on latest_df
-            updated_df = update_entries(old_df, latest_df, replace_with_empty=replace_with_empty)
+        # Update entries in old_df based on latest_df
+        updated_df = update_entries(old_df, latest_df, index_column=index_column, replace_with_empty=replace_with_empty)
 
-            st.subheader("Updated Data")
-            st.dataframe(updated_df.reset_index(), use_container_width=True)  # Reset index for display
+        st.subheader("Updated Data")
+        st.dataframe(updated_df, use_container_width=True)
 
-            # Option to download the updated DataFrame as an Excel file
-            download_excel(updated_df.reset_index(), "updated_data.xlsx")
+        # Option to download the updated DataFrame as an Excel file
+        download_excel(updated_df, "updated_data.xlsx")
 
     elif not old_excel:
         st.info("Please upload the Old Excel file.")
     elif not latest_excel:
         st.info("Please upload the Latest Excel file.")
+
