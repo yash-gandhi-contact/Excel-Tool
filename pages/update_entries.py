@@ -1,33 +1,43 @@
 import pandas as pd
-import io
 import streamlit as st
+from utils.file_utils import read_files, download_excel
+from utils.data_utils import update_entries
 
-def read_files(uploaded_files):
-    dataframes = []
-    for uploaded_file in uploaded_files:
-        file_type = uploaded_file.name.split('.')[-1].lower()
-        if file_type == 'csv':
-            df = pd.read_csv(uploaded_file)
-        elif file_type in ['xlsx', 'xls']:
-            df = pd.read_excel(uploaded_file)
-        else:
-            st.error(f"Unsupported file type: {file_type}")
-            continue
-        dataframes.append(df)
-    if dataframes:
-        combined_df = pd.concat(dataframes, ignore_index=True)
-        return combined_df
-    else:
-        return pd.DataFrame()  # Return an empty DataFrame if no valid files were processed
+def render_update_entries_page():
+    st.sidebar.header("Update Entries")
 
-def download_excel(df, file_name):
-    buffer = io.BytesIO()
-    with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
-        df.to_excel(writer, index=False, sheet_name='Updated Data')
-    buffer.seek(0)
-    st.download_button(
-        label="Download Updated Excel",
-        data=buffer,
-        file_name=file_name,
-        mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    # Upload files for the old and latest data
+    old_files = st.sidebar.file_uploader("Upload Old Files", type=['csv', 'xlsx', 'xls'], accept_multiple_files=True, key='old_files')
+    latest_files = st.sidebar.file_uploader("Upload Latest Files", type=['csv', 'xlsx', 'xls'], accept_multiple_files=True, key='latest_files')
+
+    # Radio button for replace with empty values option
+    replace_option = st.sidebar.radio(
+        "Replace with empty values",
+        ("Do not replace with empty values", "Replace with empty values"),
+        index=0
     )
+
+    # Determine if replacement should occur
+    replace_with_empty = replace_option == "Replace with empty values"
+
+    # Display information if both sets of files are uploaded
+    if old_files and latest_files:
+        old_df = read_files(old_files)
+        latest_df = read_files(latest_files)
+
+        if old_df.empty or latest_df.empty:
+            st.error("One or both of the files could not be read.")
+        else:
+            # Update entries in old_df based on latest_df
+            updated_df = update_entries(old_df, latest_df, replace_with_empty=replace_with_empty)
+
+            st.subheader("Updated Data")
+            st.dataframe(updated_df, use_container_width=True)
+
+            # Option to download the updated DataFrame as an Excel file
+            download_excel(updated_df, "updated_data.xlsx")
+
+    elif not old_files:
+        st.info("Please upload the Old Files.")
+    elif not latest_files:
+        st.info("Please upload the Latest Files.")
