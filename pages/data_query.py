@@ -6,9 +6,14 @@ from utils.ui_utils import apply_styling
 def render_data_query_dashboard():
     uploaded_files = st.sidebar.file_uploader(
         "Upload your files", type=['csv', 'xlsx', 'xls'], accept_multiple_files=True
-    )  # Allow CSV uploads
+    )
     if uploaded_files:
-        combined_df = read_files(uploaded_files)  # Updated function call
+        combined_df = read_files(uploaded_files)
+        
+        if combined_df.empty:
+            st.warning("No valid data could be read from the uploaded files.")
+            return
+
         cleaned_df = clean_data(combined_df)
 
         if 'ID' in cleaned_df.columns:
@@ -26,4 +31,4 @@ def render_data_query_dashboard():
         apply_styling()
 
     else:
-        st.info("Please upload one or more Excel or CSV files to get started.")  # Update user message
+        st.info("Please upload one or more Excel or CSV files to get started.")
