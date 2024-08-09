@@ -121,34 +121,30 @@ def update_entries(old_df, latest_df, index_column, replace_with_empty=False):
     Args:
         old_df (pd.DataFrame): The old DataFrame to be updated.
         latest_df (pd.DataFrame): The latest DataFrame with updated values.
-        index_column (str): The name of the column to be used as the index for updates.
+        index_column (str): The column to use as the index (primary key).
         replace_with_empty (bool): Whether to replace with empty values if latest_df has None.
 
     Returns:
         pd.DataFrame: The updated DataFrame.
     """
     if index_column not in old_df.columns or index_column not in latest_df.columns:
-        raise ValueError(f"Both files must contain the column '{index_column}' to perform updates.")
+        raise ValueError(f"Column '{index_column}' must be present in both DataFrames to perform updates.")
 
-    # Set the user-selected column as the index
+    # Set the specified column as the index
     old_df.set_index(index_column, inplace=True)
     latest_df.set_index(index_column, inplace=True)
 
-    # Iterate over the columns to update values
     for column in latest_df.columns:
         if replace_with_empty:
-            # Replace values including empty ones from latest_df
             old_df[column] = latest_df[column].reindex(old_df.index)
         else:
-            # Update only non-NaN values
             non_na_mask = latest_df[column].notna()
             old_df.loc[non_na_mask, column] = latest_df.loc[non_na_mask, column]
 
-    # Combine latest_df values with old_df
+    # Combine DataFrames to ensure all latest data is included
     updated_df = latest_df.combine_first(old_df)
-
-    # Reset index to convert the index back into a column for display
     updated_df.reset_index(inplace=True)
 
     return updated_df
+
 
