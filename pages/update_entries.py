@@ -23,32 +23,41 @@ def render_update_entries_page():
     # Display information if both files are uploaded
     if old_excel and latest_excel:
         # Read the files
-        if old_excel.name.endswith('.csv'):
-            old_df = pd.read_csv(old_excel)
-        else:
-            old_df = pd.read_excel(old_excel)
-        
-        if latest_excel.name.endswith('.csv'):
-            latest_df = pd.read_csv(latest_excel)
-        else:
-            latest_df = pd.read_excel(latest_excel)
+        try:
+            if old_excel.name.endswith('.csv'):
+                old_df = pd.read_csv(old_excel)
+            else:
+                old_df = pd.read_excel(old_excel)
 
-        # Let user select index column
-        common_columns = list(set(old_df.columns).intersection(set(latest_df.columns)))
-        if not common_columns:
-            st.error("No common columns found between the two files.")
+            if latest_excel.name.endswith('.csv'):
+                latest_df = pd.read_csv(latest_excel)
+            else:
+                latest_df = pd.read_excel(latest_excel)
+        except Exception as e:
+            st.error(f"Error reading files: {e}")
             return
 
+        # Find common columns
+        common_columns = list(set(old_df.columns) & set(latest_df.columns))
+        
+        if not common_columns:
+            st.error("No common columns found between the two files. Please upload files with at least one matching column.")
+            return
+
+        # Let user select index column
         index_column = st.sidebar.selectbox("Select column to use as index", common_columns)
 
         # Update entries in old_df based on latest_df
-        updated_df = update_entries(old_df, latest_df, index_column=index_column, replace_with_empty=replace_with_empty)
+        try:
+            updated_df = update_entries(old_df, latest_df, index_column=index_column, replace_with_empty=replace_with_empty)
 
-        st.subheader("Updated Data")
-        st.dataframe(updated_df, use_container_width=True)
+            st.subheader("Updated Data")
+            st.dataframe(updated_df, use_container_width=True)
 
-        # Option to download the updated DataFrame as an Excel file
-        download_excel(updated_df, "updated_data.xlsx")
+            # Option to download the updated DataFrame as an Excel file
+            download_excel(updated_df, "updated_data.xlsx")
+        except Exception as e:
+            st.error(f"Error updating entries: {e}")
 
     elif not old_excel:
         st.info("Please upload the Old Excel file.")
