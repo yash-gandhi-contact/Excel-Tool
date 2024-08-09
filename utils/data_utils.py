@@ -94,8 +94,9 @@ def filter_dataframe(df: pd.DataFrame) -> pd.DataFrame:
                     f"Substring or regex in {column}",
                 )
                 if user_text_input:
-                    # Convert all values to strings and handle NaN gracefully
-                    df = df[df[column].astype(str).str.contains(user_text_input, na=False)]
+                    # Ensure column values are converted to strings and handle NaN values
+                    df[column] = df[column].astype(str)  # Convert column to string
+                    df = df[df[column].str.contains(user_text_input, na=False, case=False)]
 
     return df
 
