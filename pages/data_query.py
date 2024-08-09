@@ -1,12 +1,14 @@
 import streamlit as st
 from utils.data_utils import clean_data, filter_dataframe, extract_alphabetic_prefix
-from utils.file_utils import read_excel_files
+from utils.file_utils import read_files  # Updated function import
 from utils.ui_utils import apply_styling
 
 def render_data_query_dashboard():
-    uploaded_files = st.sidebar.file_uploader("Upload your Excel files", type=['xlsx', 'xls'], accept_multiple_files=True)
+    uploaded_files = st.sidebar.file_uploader(
+        "Upload your files", type=['csv', 'xlsx', 'xls'], accept_multiple_files=True
+    )  # Allow CSV uploads
     if uploaded_files:
-        combined_df = read_excel_files(uploaded_files)
+        combined_df = read_files(uploaded_files)  # Updated function call
         cleaned_df = clean_data(combined_df)
 
         if 'ID' in cleaned_df.columns:
@@ -24,4 +26,4 @@ def render_data_query_dashboard():
         apply_styling()
 
     else:
-        st.info("Please upload one or more Excel files to get started.")
+        st.info("Please upload one or more Excel or CSV files to get started.")  # Update user message
