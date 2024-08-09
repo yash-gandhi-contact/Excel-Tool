@@ -114,25 +114,23 @@ def extract_alphabetic_prefix(id_value):
     letters = re.findall(r'[A-Za-z]', str(id_value))
     return ''.join(letters[:2]).upper()
 
-def update_entries(old_df, latest_df, index_column, replace_with_empty=False):
+def update_entries(old_df, latest_df, replace_with_empty=False):
     """
     Updates entries in old_df based on latest_df, with an option to replace with empty values.
 
     Args:
         old_df (pd.DataFrame): The old DataFrame to be updated.
         latest_df (pd.DataFrame): The latest DataFrame with updated values.
-        index_column (str): The column to use as the index (primary key).
         replace_with_empty (bool): Whether to replace with empty values if latest_df has None.
 
     Returns:
         pd.DataFrame: The updated DataFrame.
     """
-    if index_column not in old_df.columns or index_column not in latest_df.columns:
-        raise ValueError(f"Column '{index_column}' must be present in both DataFrames to perform updates.")
+    if 'ID' not in old_df.columns or 'ID' not in latest_df.columns:
+        raise ValueError("Both files must contain an 'ID' column to perform updates.")
 
-    # Set the specified column as the index
-    old_df.set_index(index_column, inplace=True)
-    latest_df.set_index(index_column, inplace=True)
+    old_df.set_index('ID', inplace=True)
+    latest_df.set_index('ID', inplace=True)
 
     for column in latest_df.columns:
         if replace_with_empty:
@@ -141,7 +139,6 @@ def update_entries(old_df, latest_df, index_column, replace_with_empty=False):
             non_na_mask = latest_df[column].notna()
             old_df.loc[non_na_mask, column] = latest_df.loc[non_na_mask, column]
 
-    # Combine DataFrames to ensure all latest data is included
     updated_df = latest_df.combine_first(old_df)
     updated_df.reset_index(inplace=True)
 
