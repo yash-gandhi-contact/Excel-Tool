@@ -1,42 +1,33 @@
 import pandas as pd
+import io
 import streamlit as st
-from io import BytesIO
 
-def download_excel(df: pd.DataFrame, filename: str):
-    """
-    Provides a download link for a DataFrame as an Excel file.
+def read_files(uploaded_files):
+    dataframes = []
+    for uploaded_file in uploaded_files:
+        file_type = uploaded_file.name.split('.')[-1].lower()
+        if file_type == 'csv':
+            df = pd.read_csv(uploaded_file)
+        elif file_type in ['xlsx', 'xls']:
+            df = pd.read_excel(uploaded_file)
+        else:
+            st.error(f"Unsupported file type: {file_type}")
+            continue
+        dataframes.append(df)
+    if dataframes:
+        combined_df = pd.concat(dataframes, ignore_index=True)
+        return combined_df
+    else:
+        return pd.DataFrame()  # Return an empty DataFrame if no valid files were processed
 
-    Args:
-        df (pd.DataFrame): The DataFrame to be downloaded.
-        filename (str): The name of the file to be downloaded.
-    """
-    if df is not None:
-        buffer = BytesIO()
-        with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
-            df.to_excel(writer, index=False)
-        buffer.seek(0)
-        st.download_button(
-            label="Download Excel",
-            data=buffer,
-            file_name=filename,
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        )
-
-def download_csv(df: pd.DataFrame, filename: str):
-    """
-    Provides a download link for a DataFrame as a CSV file.
-
-    Args:
-        df (pd.DataFrame): The DataFrame to be downloaded.
-        filename (str): The name of the file to be downloaded.
-    """
-    if df is not None:
-        buffer = BytesIO()
-        df.to_csv(buffer, index=False)
-        buffer.seek(0)
-        st.download_button(
-            label="Download CSV",
-            data=buffer,
-            file_name=filename,
-            mime="text/csv"
-        )
+def download_excel(df, file_name):
+    buffer = io.BytesIO()
+    with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
+        df.to_excel(writer, index=False, sheet_name='Updated Data')
+    buffer.seek(0)
+    st.download_button(
+        label="Download Updated Excel",
+        data=buffer,
+        file_name=file_name,
+        mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
