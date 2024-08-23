@@ -1,12 +1,12 @@
 import streamlit as st
-from pages.data_query import render_data_query_dashboard
-from pages.update_entries import render_update_entries_page
 from utils.ui_utils import set_logo_and_links
-from pages.update_entries import render_update_entries_page
+from modules.data_query import render_data_query_dashboard
+from modules.update_entries import render_update_entries_page
 import sys
 import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), 'utils')))
+
 
 # Set page configuration
 st.set_page_config(

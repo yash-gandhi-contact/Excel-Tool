@@ -10,17 +10,28 @@ import streamlit as st
 def clean_data(df: pd.DataFrame) -> pd.DataFrame:
     """
     Cleans the dataframe by ensuring consistent column data types.
-
-    Args:
-        df (pd.DataFrame): Original dataframe.
-
-    Returns:
-        pd.DataFrame: Cleaned dataframe.
     """
     for column in df.columns:
+        # Replace empty strings with NA
         if df[column].dtype == 'object':
             df[column] = df[column].replace('', pd.NA)
+        
+        # Attempt to convert numeric columns
+        if is_numeric_dtype(df[column]):
+            df[column] = pd.to_numeric(df[column], errors='coerce')
+        
+        # Convert datetime columns
+        elif is_datetime64_any_dtype(df[column]):
+            df[column] = pd.to_datetime(df[column], errors='coerce')
+        
+        # Convert all object columns to string
+        if df[column].dtype == 'object':
+            df[column] = df[column].astype(str)
+    
     return df
+
+
+
 
 def filter_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     """
@@ -100,19 +111,19 @@ def filter_dataframe(df: pd.DataFrame) -> pd.DataFrame:
 
     return df
 
-def extract_alphabetic_prefix(id_value):
-    """
-    Extracts the first two alphabetic characters from an ID.
+# def extract_alphabetic_prefix(id_value):
+#     """
+#     Extracts the first two alphabetic characters from an ID.
 
-    Args:
-        id_value (str or int): The ID from which to extract the prefix.
+#     Args:
+#         id_value (str or int): The ID from which to extract the prefix.
 
-    Returns:
-        str: The first two alphabetic characters in uppercase.
-    """
-    import re
-    letters = re.findall(r'[A-Za-z]', str(id_value))
-    return ''.join(letters[:2]).upper()
+#     Returns:
+#         str: The first two alphabetic characters in uppercase.
+#     """
+#     import re
+#     letters = re.findall(r'[A-Za-z]', str(id_value))
+#     return ''.join(letters[:2]).upper()
 
 def update_entries(old_df, latest_df, replace_with_empty=False):
     """
