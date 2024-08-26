@@ -1,33 +1,30 @@
-import pandas as pd
 import streamlit as st
 from utils.file_utils import read_files, download_excel
 from utils.data_utils import update_entries
+import pandas as pd
+import datetime
 
 def render_update_entries_page():
     st.sidebar.header("Update Entries")
 
     # Upload files for the old and latest data
-    old_files = st.sidebar.file_uploader("Upload Old Files", type=['csv', 'xlsx', 'xls'], accept_multiple_files=True, key='old_files')
-    latest_files = st.sidebar.file_uploader("Upload Latest Files", type=['csv', 'xlsx', 'xls'], accept_multiple_files=True, key='latest_files')
+    old_file = st.sidebar.file_uploader("Upload Old File", type=['csv', 'xlsx', 'xls'], accept_multiple_files=False, key='old_file')
+    latest_file = st.sidebar.file_uploader("Upload Latest File", type=['csv', 'xlsx', 'xls'], accept_multiple_files=False, key='latest_file')
 
-    if old_files and latest_files:
-        old_df = read_files(old_files)
-        latest_df = read_files(latest_files)
+    if old_file and latest_file:
+        # Read the old file and latest file into dataframes
+        old_df = read_files([old_file])
+        latest_df = read_files([latest_file])
 
         if old_df.empty or latest_df.empty:
             st.error("One or both of the files could not be read.")
-            return
-
-        # Check for duplicate column names in both DataFrames
-        if old_df.columns.duplicated().any() or latest_df.columns.duplicated().any():
-            st.error("Duplicate column names detected. Please ensure each column has a unique name.")
             return
 
         # Allow the user to select the index column
         st.sidebar.subheader("Select Index Column")
         index_column = st.sidebar.selectbox(
             "Choose the index column for updating entries:",
-            options=set(old_df.columns.tolist()) & set(latest_df.columns.tolist()),  # Only columns present in both DataFrames
+            options=list(set(old_df.columns) & set(latest_df.columns)),  # Only columns present in both DataFrames
             index=0
         )
 
@@ -39,19 +36,38 @@ def render_update_entries_page():
         )
         replace_with_empty = replace_option == "Replace with empty values"
 
-        # Perform the update
-        try:
-            updated_df = update_entries(old_df, latest_df, index_column, replace_with_empty=replace_with_empty)
-            st.subheader("Updated Data")
-            st.dataframe(updated_df, use_container_width=True)
+        # Perform the update and allow the user to review changes
+        updated_df = update_entries(old_df, latest_df, index_column, replace_with_empty=replace_with_empty)
 
-            # Option to download the updated DataFrame as an Excel file
-            download_excel(updated_df, "updated_data.xlsx")
+        st.subheader("Review Updated Data")
+        st.dataframe(updated_df, use_container_width=True)
 
-        except ValueError as e:
-            st.error(str(e))
+        # Get original file name
+        original_filename = old_file.name
 
-    elif not old_files:
-        st.info("Please upload the Old Files.")
-    elif not latest_files:
-        st.info("Please upload the Latest Files.")
+        # Extract file name without extension
+        file_name_without_ext = original_filename.rsplit('.', 1)[0]
+        file_extension = original_filename.rsplit('.', 1)[1]
+
+        # Input fields for user to specify name and date
+        user_name = st.text_input("Enter your name", value="yash")
+        user_date = st.date_input("Enter the date", value=datetime.date.today())
+        formatted_date = user_date.strftime("%d%m%Y")  # Format the date
+
+        if st.button("Generate Downloadable File"):
+            # Construct new file name
+            new_filename = f"{file_name_without_ext}_{user_name}_{formatted_date}.{file_extension}"
+            download_excel(updated_df, new_filename)
+
+        # Instructions for manual replacement
+        st.write("""
+        **To apply changes to your original file:**
+        1. Download the updated file using the button above.
+        2. Replace your original file with the downloaded file manually.
+        """)
+
+    else:
+        if not old_file:
+            st.info("Please upload the Old File.")
+        if not latest_file:
+            st.info("Please upload the Latest File.")

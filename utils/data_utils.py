@@ -125,35 +125,25 @@ def filter_dataframe(df: pd.DataFrame) -> pd.DataFrame:
 #     letters = re.findall(r'[A-Za-z]', str(id_value))
 #     return ''.join(letters[:2]).upper()
 
-
 def update_entries(old_df, latest_df, index_column, replace_with_empty=False):
     """
     Updates entries in old_df based on latest_df, with an option to replace with empty values.
-    
+
     Args:
         old_df (pd.DataFrame): The old DataFrame to be updated.
         latest_df (pd.DataFrame): The latest DataFrame with updated values.
-        index_column (str): The column to be used as the index for updates.
+        index_column (str): The column name to be used as the index.
         replace_with_empty (bool): Whether to replace with empty values if latest_df has None.
-    
+
     Returns:
         pd.DataFrame: The updated DataFrame.
     """
-    # Check for duplicate columns in both DataFrames
-    if old_df.columns.duplicated().any():
-        raise ValueError("Duplicate column names detected in Old Data. Please rename columns and try again.")
-    if latest_df.columns.duplicated().any():
-        raise ValueError("Duplicate column names detected in Latest Data. Please rename columns and try again.")
-
-    # Ensure the chosen index column exists in both DataFrames
     if index_column not in old_df.columns or index_column not in latest_df.columns:
-        raise ValueError(f"Both files must contain the '{index_column}' column to perform updates.")
+        raise ValueError("The selected index column must be present in both DataFrames.")
 
-    # Set the chosen column as the index
     old_df.set_index(index_column, inplace=True)
     latest_df.set_index(index_column, inplace=True)
 
-    # Perform the update
     for column in latest_df.columns:
         if replace_with_empty:
             old_df[column] = latest_df[column].reindex(old_df.index)
@@ -161,10 +151,7 @@ def update_entries(old_df, latest_df, index_column, replace_with_empty=False):
             non_na_mask = latest_df[column].notna()
             old_df.loc[non_na_mask, column] = latest_df.loc[non_na_mask, column]
 
-    # Combine the latest DataFrame with the old DataFrame
     updated_df = latest_df.combine_first(old_df)
     updated_df.reset_index(inplace=True)
 
     return updated_df
-
-
