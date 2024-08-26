@@ -1,6 +1,6 @@
 import streamlit as st
-from utils.data_utils import clean_data, filter_dataframe #extract_alphabetic_prefix
-from utils.file_utils import read_files  # Updated function import
+from utils.data_utils import clean_data, filter_dataframe 
+from utils.file_utils import read_files
 from utils.ui_utils import apply_styling
 
 def render_data_query_dashboard():
@@ -14,17 +14,19 @@ def render_data_query_dashboard():
             st.warning("No valid data could be read from the uploaded files.")
             return
 
+        # Allow the user to select the index column
+        st.sidebar.subheader("Select Index Column")
+        index_column = st.sidebar.selectbox(
+            "Choose the index column:",
+            options=combined_df.columns.tolist(),
+            index=0
+        )
+
+        # Set the selected column as the index
+        combined_df.set_index(index_column, inplace=True)
+
         # Clean and ensure consistent data types
         cleaned_df = clean_data(combined_df)
-
-        # Handle specific columns if needed
-        if 'ID' in cleaned_df.columns:
-            cleaned_df['ID'] = cleaned_df['ID'].astype(str)  # Ensure ID column is treated as string
-           # cleaned_df['ID_prefix'] = cleaned_df['ID'].apply(extract_alphabetic_prefix)
-            #id_prefixes = cleaned_df['ID_prefix'].dropna().unique()
-            #selected_prefix = st.sidebar.selectbox("Select ID Prefix", options=['All'] + list(id_prefixes))
-            #if selected_prefix != 'All':
-            #    cleaned_df = cleaned_df[cleaned_df['ID_prefix'] == selected_prefix]
 
         st.sidebar.title("Filter Options")
         filtered_data = filter_dataframe(cleaned_df)
