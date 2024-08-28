@@ -2,21 +2,24 @@ import streamlit as st
 import pandas as pd
 from fuzzywuzzy import fuzz
 
-# Initialize session state for data and threshold if not already initialized
-if "df1" not in st.session_state:
-    st.session_state.df1 = pd.DataFrame()
-if "df2" not in st.session_state:
-    st.session_state.df2 = pd.DataFrame()
-if "fuzzy_results" not in st.session_state:
-    st.session_state.fuzzy_results = pd.DataFrame()
-if "filtered_results" not in st.session_state:
-    st.session_state.filtered_results = pd.DataFrame()
-if "duplicate_values" not in st.session_state:
-    st.session_state.duplicate_values = pd.DataFrame()
-if "column_pairs" not in st.session_state:
-    st.session_state.column_pairs = []
-if "thresholds" not in st.session_state:
-    st.session_state.thresholds = {}  # Store thresholds for each pair
+def initialize_session_state():
+    """Initialize session state variables if they are not already set."""
+    if "df1" not in st.session_state:
+        st.session_state.df1 = pd.DataFrame()
+    if "df2" not in st.session_state:
+        st.session_state.df2 = pd.DataFrame()
+    if "fuzzy_results" not in st.session_state:
+        st.session_state.fuzzy_results = pd.DataFrame()
+    if "filtered_results" not in st.session_state:
+        st.session_state.filtered_results = pd.DataFrame()
+    if "duplicate_values" not in st.session_state:
+        st.session_state.duplicate_values = pd.DataFrame()
+    if "column_pairs" not in st.session_state:
+        st.session_state.column_pairs = []
+    if "thresholds" not in st.session_state:
+        st.session_state.thresholds = {}  # Store thresholds for each pair
+
+initialize_session_state()
 
 def fuzzy_match_columns(df1, df2, col1, col2):
     """Apply fuzzy matching between two columns."""
@@ -91,6 +94,9 @@ def render_fuzzy_lookup_page():
         filtered_results_list = []
         duplicate_values_list = []
 
+        # Create a mask for filtering rows that satisfy all thresholds
+        mask = pd.Series([True] * len(st.session_state.fuzzy_results))
+
         for col1, col2 in st.session_state.column_pairs:
             col_name = f"{col1}-{col2} Similarity %"
             threshold = st.slider(f"Set similarity threshold for {col1}-{col2}", 0, 100, st.session_state.thresholds.get(f"{col1}-{col2}", 95), key=f"threshold_{col1}_{col2}")
@@ -98,20 +104,13 @@ def render_fuzzy_lookup_page():
             # Update session state with threshold value
             st.session_state.thresholds[f"{col1}-{col2}"] = threshold
             
-            # Filter results based on the threshold
-            filtered_results = st.session_state.fuzzy_results[
-                st.session_state.fuzzy_results[col_name] < threshold
-            ]
-            filtered_results_list.append(filtered_results)
+            # Create a mask where the similarity is above the threshold
+            current_mask = st.session_state.fuzzy_results[col_name] >= threshold
+            mask &= current_mask  # Combine with the existing mask
             
-            duplicate_values = st.session_state.fuzzy_results[
-                st.session_state.fuzzy_results[col_name] >= threshold
-            ]
-            duplicate_values_list.append(duplicate_values)
-        
-        # Concatenate results for all thresholds
-        st.session_state.filtered_results = pd.concat(filtered_results_list).drop_duplicates()
-        st.session_state.duplicate_values = pd.concat(duplicate_values_list).drop_duplicates()
+        # Apply the combined mask to filter results
+        st.session_state.filtered_results = st.session_state.fuzzy_results[mask]
+        st.session_state.duplicate_values = st.session_state.fuzzy_results[~mask]
 
         # Display filtered results
         st.write(f"Filtered Results (Based on Similarity % thresholds)")
