@@ -141,17 +141,25 @@ def update_entries(old_df, latest_df, index_column, replace_with_empty=False):
     if index_column not in old_df.columns or index_column not in latest_df.columns:
         raise ValueError("The selected index column must be present in both DataFrames.")
 
+    # Set index for both DataFrames
     old_df.set_index(index_column, inplace=True)
     latest_df.set_index(index_column, inplace=True)
 
+    # Update old_df with latest_df where non-empty values are present
     for column in latest_df.columns:
         if replace_with_empty:
+            # Directly replace values from latest_df
             old_df[column] = latest_df[column].reindex(old_df.index)
         else:
+            # Only replace non-NA values from latest_df
             non_na_mask = latest_df[column].notna()
-            old_df.loc[non_na_mask, column] = latest_df.loc[non_na_mask, column]
+            old_df.loc[non_na_mask.index[non_na_mask], column] = latest_df.loc[non_na_mask.index[non_na_mask], column]
 
+    # Combine the two DataFrames, filling old_df with the missing entries from latest_df
     updated_df = latest_df.combine_first(old_df)
+
+    # Reset the index to preserve the original structure
     updated_df.reset_index(inplace=True)
 
     return updated_df
+
