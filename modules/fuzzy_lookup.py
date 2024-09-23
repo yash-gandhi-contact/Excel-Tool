@@ -20,11 +20,12 @@ def initialize_session_state():
     if "thresholds" not in st.session_state:
         st.session_state.thresholds = {}
 
+# Call the initialization function on app start
 initialize_session_state()
 
 def fuzzy_match_columns(df1, df2, col1, col2):
     """Apply fuzzy matching between two columns."""
-    similarity_scores = df1[col1].apply(lambda x: max([fuzz.ratio(str(x), str(y)) for y in df2[col2]]))
+    similarity_scores = df1[col1].apply(lambda x: max([fuzz.ratio(str(x), str(y)) for y in df2[col2]], default=0))
     return similarity_scores
 
 def ensure_unique_columns(df):
@@ -38,6 +39,11 @@ def ensure_unique_columns(df):
 def render_fuzzy_lookup_page():
     st.header("Fuzzy Lookup")
 
+    # Check if dataframes are initialized
+    if st.button("Initialize Session State"):
+        initialize_session_state()
+        st.success("Session state initialized!")
+
     # File upload
     df1_file = st.file_uploader("Upload Master Data File", type=['xlsx', 'csv'], key="upload1")
     df2_file = st.file_uploader("Upload New Data File", type=['xlsx', 'csv'], key="upload2")
@@ -48,10 +54,12 @@ def render_fuzzy_lookup_page():
             st.session_state.df1 = pd.read_excel(df1_file) if df1_file.name.endswith('xlsx') else pd.read_csv(df1_file)
             st.session_state.df2 = pd.read_excel(df2_file) if df2_file.name.endswith('xlsx') else pd.read_csv(df2_file)
 
-        # Ensure unique column names
-        st.session_state.df1 = ensure_unique_columns(st.session_state.df1)
-        st.session_state.df2 = ensure_unique_columns(st.session_state.df2)
+            # Ensure unique column names
+            st.session_state.df1 = ensure_unique_columns(st.session_state.df1)
+            st.session_state.df2 = ensure_unique_columns(st.session_state.df2)
 
+    # Proceed only if dataframes are loaded
+    if not st.session_state.df1.empty and not st.session_state.df2.empty:
         with st.form("fuzzy_form"):
             st.write("Select Columns to Compare")
 
@@ -93,96 +101,96 @@ def render_fuzzy_lookup_page():
                     if key not in st.session_state.thresholds:
                         st.session_state.thresholds[key] = 80
 
-    # Ensure 'fuzzy_results' exists and is not empty before trying to use it
-    if "fuzzy_results" in st.session_state and not st.session_state.fuzzy_results.empty:
-        # Display Fuzzy Matching Results
-        st.write("Fuzzy Matching Results")
-        st.write(st.session_state.fuzzy_results)
+        # Ensure 'fuzzy_results' exists and is not empty before trying to use it
+        if not st.session_state.fuzzy_results.empty:
+            # Display Fuzzy Matching Results
+            st.write("Fuzzy Matching Results")
+            st.write(st.session_state.fuzzy_results)
 
-        # Add sliders for filtering results for each column pair based on similarity %
-        for col1, col2 in st.session_state.column_pairs:
-            st.subheader(f"Filter Results by Similarity % for {col1}-{col2}")
-            similarity_col = f"{col1}-{col2} Similarity %"
+            # Add sliders for filtering results for each column pair based on similarity %
+            for col1, col2 in st.session_state.column_pairs:
+                st.subheader(f"Filter Results by Similarity % for {col1}-{col2}")
+                similarity_col = f"{col1}-{col2} Similarity %"
 
-            # Slider for each column pair
-            threshold = st.slider(f"Set similarity threshold for {col1}-{col2}", 0, 100, st.session_state.thresholds.get(f"{col1}-{col2}", 80), key=f"threshold_{col1}_{col2}")
+                # Slider for each column pair
+                threshold = st.slider(f"Set similarity threshold for {col1}-{col2}", 0, 100, st.session_state.thresholds.get(f"{col1}-{col2}", 80), key=f"threshold_{col1}_{col2}")
 
-            # Update threshold in session state
-            st.session_state.thresholds[f"{col1}-{col2}"] = threshold
+                # Update threshold in session state
+                st.session_state.thresholds[f"{col1}-{col2}"] = threshold
 
-        # Apply filtering based on all thresholds together
-        filter_condition = True
-        duplicate_condition = True
+            # Apply filtering based on all thresholds together
+            filter_condition = True
+            duplicate_condition = True
 
-        for col1, col2 in st.session_state.column_pairs:
-            similarity_col = f"{col1}-{col2} Similarity %"
-            threshold = st.session_state.thresholds[f"{col1}-{col2}"]
+            for col1, col2 in st.session_state.column_pairs:
+                similarity_col = f"{col1}-{col2} Similarity %"
+                threshold = st.session_state.thresholds[f"{col1}-{col2}"]
 
-            # Filter rows where similarity is less than the threshold
-            filter_condition &= st.session_state.fuzzy_results[similarity_col] < threshold
+                # Filter rows where similarity is less than the threshold
+                filter_condition &= st.session_state.fuzzy_results[similarity_col] < threshold
 
-            # Identify rows where similarity is greater than or equal to the threshold (ALL conditions together)
-            duplicate_condition &= st.session_state.fuzzy_results[similarity_col] >= threshold
+                # Identify rows where similarity is greater than or equal to the threshold (ALL conditions together)
+                duplicate_condition &= st.session_state.fuzzy_results[similarity_col] >= threshold
 
-        # Filtered dataframe (satisfying all conditions)
-        st.session_state.filtered_results = st.session_state.fuzzy_results[filter_condition]
+            # Filtered dataframe (satisfying all conditions)
+            st.session_state.filtered_results = st.session_state.fuzzy_results[filter_condition]
 
-        # Duplicate dataframe (where all similarities exceed the thresholds together)
-        st.session_state.duplicate_values = st.session_state.fuzzy_results[duplicate_condition]
+            # Duplicate dataframe (where all similarities exceed the thresholds together)
+            st.session_state.duplicate_values = st.session_state.fuzzy_results[duplicate_condition]
 
-        # Display filtered results
-        st.subheader("Filtered Results (Rows meeting all thresholds)")
-        st.write(st.session_state.filtered_results)
+            # Display filtered results
+            st.subheader("Filtered Results (Rows meeting all thresholds)")
+            st.write(st.session_state.filtered_results)
 
-        # Display duplicate values
-        st.subheader("Duplicate Values (Rows exceeding all thresholds together)")
-        st.write(st.session_state.duplicate_values)
+            # Display duplicate values
+            st.subheader("Duplicate Values (Rows exceeding all thresholds together)")
+            st.write(st.session_state.duplicate_values)
 
-        # Download Data as Excel File
-        def download_as_excel():
-            """Converts two dataframes into an Excel file with two sheets."""
-            output = BytesIO()
-            writer = pd.ExcelWriter(output, engine='xlsxwriter')
+            # Download Data as Excel File
+            def download_as_excel():
+                """Converts two dataframes into an Excel file with two sheets."""
+                output = BytesIO()
+                writer = pd.ExcelWriter(output, engine='xlsxwriter')
 
-            # Write each dataframe to a different sheet
-            st.session_state.filtered_results.to_excel(writer, sheet_name='Filtered Data', index=False)
-            st.session_state.duplicate_values.to_excel(writer, sheet_name='Duplicate Values', index=False)
+                # Write each dataframe to a different sheet
+                st.session_state.filtered_results.to_excel(writer, sheet_name='Filtered Data', index=False)
+                st.session_state.duplicate_values.to_excel(writer, sheet_name='Duplicate Values', index=False)
 
-            writer.close()  # Use close() instead of save()
-            output.seek(0)
-            return output
+                writer.close()  # Use close() instead of save()
+                output.seek(0)
+                return output
 
-        # Download Data as CSV File
-        def download_as_csv():
-            """Converts two dataframes into a single CSV file with filtered and duplicate values."""
-            filtered_csv = st.session_state.filtered_results.to_csv(index=False)
-            duplicate_csv = st.session_state.duplicate_values.to_csv(index=False)
-            return filtered_csv, duplicate_csv
+            # Download Data as CSV File
+            def download_as_csv():
+                """Converts two dataframes into a single CSV file with filtered and duplicate values."""
+                filtered_csv = st.session_state.filtered_results.to_csv(index=False)
+                duplicate_csv = st.session_state.duplicate_values.to_csv(index=False)
+                return filtered_csv, duplicate_csv
 
-        # Add download buttons
-        st.download_button(
-            label="Download as Excel",
-            data=download_as_excel(),
-            file_name='fuzzy_matching_results.xlsx',
-            mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-        )
+            # Add download buttons
+            st.download_button(
+                label="Download as Excel",
+                data=download_as_excel(),
+                file_name='fuzzy_matching_results.xlsx',
+                mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            )
 
-        # Download as CSV
-        filtered_csv, duplicate_csv = download_as_csv()
+            # Download as CSV
+            filtered_csv, duplicate_csv = download_as_csv()
 
-        st.download_button(
-            label="Download Filtered Data as CSV",
-            data=filtered_csv,
-            file_name='filtered_data.csv',
-            mime='text/csv'
-        )
+            st.download_button(
+                label="Download Filtered Data as CSV",
+                data=filtered_csv,
+                file_name='filtered_data.csv',
+                mime='text/csv'
+            )
 
-        st.download_button(
-            label="Download Duplicate Data as CSV",
-            data=duplicate_csv,
-            file_name='duplicate_data.csv',
-            mime='text/csv'
-        )
+            st.download_button(
+                label="Download Duplicate Data as CSV",
+                data=duplicate_csv,
+                file_name='duplicate_data.csv',
+                mime='text/csv'
+            )
 
 if __name__ == "__main__":
     render_fuzzy_lookup_page()
