@@ -1,8 +1,28 @@
 import streamlit as st
-from utils.file_utils import read_files, download_excel
+from utils.file_utils import download_excel
 from utils.data_utils import update_entries
 import pandas as pd
 import datetime
+
+def read_files(uploaded_files):
+    dataframes = []
+    for uploaded_file in uploaded_files:
+        try:
+            if uploaded_file.name.endswith('.csv'):
+                df = pd.read_csv(uploaded_file)  # Read CSV file
+            else:
+                df = pd.read_excel(uploaded_file)  # Read Excel file
+            dataframes.append(df)
+        except Exception as e:
+            st.error(f"Error reading file {uploaded_file.name}: {str(e)}")
+            continue
+
+    if dataframes:
+        # Combine all DataFrames into one if multiple files were uploaded
+        combined_df = pd.concat(dataframes, ignore_index=True)
+        return combined_df  # Ensure this is a single DataFrame
+    else:
+        return pd.DataFrame()  # Return an empty DataFrame if no files were read successfully
 
 def render_update_entries_page():
     st.sidebar.header("Update Entries")

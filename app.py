@@ -3,6 +3,8 @@ from modules.data_query import render_data_query_dashboard
 from modules.update_entries import render_update_entries_page
 from modules.fuzzy_lookup import render_fuzzy_lookup_page  # Import the fuzzy lookup page
 from utils.ui_utils import set_logo_and_links
+from modules.check_page import render_check_page
+
 import sys
 import os
 
@@ -21,7 +23,7 @@ def main():
     st.sidebar.title("Navigation")
     page_selection = st.sidebar.selectbox(
         "Select Page",
-        ["Update Entries", "Dynamic Excel Data Query", "Fuzzy Lookup"],  # Add "Fuzzy Lookup" to the list
+        ["Update Entries", "Dynamic Excel Data Query", "Fuzzy Lookup", "Check and Replace"],  # Add "Check" to the list
         index=0
     )
     if page_selection == "Dynamic Excel Data Query":
@@ -30,9 +32,12 @@ def main():
     elif page_selection == "Update Entries":
         st.markdown("<h2 style='text-align: center;'>Update Entries</h2>", unsafe_allow_html=True)
         render_update_entries_page()
-    elif page_selection == "Fuzzy Lookup":  # Call the render function for the new page
+    elif page_selection == "Fuzzy Lookup":  # Call the render function for the fuzzy lookup page
         st.markdown("<h2 style='text-align: center;'>Fuzzy Lookup</h2>", unsafe_allow_html=True)
         render_fuzzy_lookup_page()
+    elif page_selection == "Check and Replace":  # New empty Check page
+        
+        render_check_page()
 
 if __name__ == "__main__":
     main()

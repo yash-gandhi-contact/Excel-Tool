@@ -58,6 +58,26 @@ def render_fuzzy_lookup_page():
             st.session_state.df1 = ensure_unique_columns(st.session_state.df1)
             st.session_state.df2 = ensure_unique_columns(st.session_state.df2)
 
+            # Get sheet names if they are Excel files
+            if df1_file.name.endswith('xlsx'):
+                st.session_state.sheet_names1 = pd.ExcelFile(df1_file).sheet_names
+            else:
+                st.session_state.sheet_names1 = ['Only one sheet in CSV']
+
+            if df2_file.name.endswith('xlsx'):
+                st.session_state.sheet_names2 = pd.ExcelFile(df2_file).sheet_names
+            else:
+                st.session_state.sheet_names2 = ['Only one sheet in CSV']
+
+            st.session_state.selected_sheet1 = st.selectbox("Select sheet from Master Data", st.session_state.sheet_names1)
+            st.session_state.selected_sheet2 = st.selectbox("Select sheet from New Data", st.session_state.sheet_names2)
+
+            # Reload data from the selected sheets if needed
+            if df1_file.name.endswith('xlsx'):
+                st.session_state.df1 = pd.read_excel(df1_file, sheet_name=st.session_state.selected_sheet1)
+            if df2_file.name.endswith('xlsx'):
+                st.session_state.df2 = pd.read_excel(df2_file, sheet_name=st.session_state.selected_sheet2)
+
     # Proceed only if dataframes are loaded
     if not st.session_state.df1.empty and not st.session_state.df2.empty:
         with st.form("fuzzy_form"):
