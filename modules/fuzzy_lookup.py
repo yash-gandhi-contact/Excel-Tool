@@ -81,6 +81,7 @@ def render_fuzzy_lookup_page():
             st.session_state.selected_sheet1 = st.selectbox("Select sheet from Master Data", st.session_state.sheet_names1)
             st.session_state.selected_sheet2 = st.selectbox("Select sheet from New Data", st.session_state.sheet_names2)
 
+            st.warning("Note: The sheet selection function is currently not working. We are working on it. First sheet will select by default!")
             # Reload data from the selected sheets if needed
             if df1_file.name.endswith('xlsx'):
                 st.session_state.df1 = pd.read_excel(df1_file, sheet_name=st.session_state.selected_sheet1)
