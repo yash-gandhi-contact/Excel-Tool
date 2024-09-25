@@ -12,7 +12,7 @@ def download_as_excel(master_data_df):
     return output
 
 def render_check_page():
-    st.header("Check and Replace")
+    st.header("Check Page")
 
     # File uploaders in the sidebar
     st.sidebar.header("Upload Files")
@@ -47,6 +47,9 @@ def render_check_page():
             master_data_sheet = st.selectbox("Select Sheet for Master Data", master_data_sheets)
             if master_data_sheet:
                 master_data_df = pd.read_excel(master_data_file, sheet_name=master_data_sheet)
+
+    # Store original data types
+    original_dtypes = master_data_df.dtypes if not master_data_df.empty else None
 
     # Display dropdowns for column selection if dataframes are loaded
     if not new_data_df.empty and not master_data_df.empty:
@@ -117,6 +120,10 @@ def render_check_page():
                 master_index = updated_master_data_df[updated_master_data_df[selected_master_column] == row[selected_master_column]].index
                 if not master_index.empty:
                     updated_master_data_df.loc[master_index, compare_master_column] = row['Comparison_Result']
+
+            # Apply original data types to the updated master dataframe
+            for col in original_dtypes.index:
+                updated_master_data_df[col] = updated_master_data_df[col].astype(original_dtypes[col])
 
             st.subheader("Updated Master Data")
             st.dataframe(updated_master_data_df)

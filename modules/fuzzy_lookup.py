@@ -36,17 +36,26 @@ def ensure_unique_columns(df):
     df.columns = cols
     return df
 
-def render_fuzzy_lookup_page():
-    st.header("Fuzzy Lookup")
-
-    # Check if dataframes are initialized
-    if st.button("Initialize Session State"):
-        initialize_session_state()
-        st.success("Session state initialized!")
-
-    # File upload
+def render_fuzzy_lookup_page():   
+        
+    if st.button("Reset"):
+        # Clear session state related to the uploaded files
+            initialize_session_state()
+            st.session_state.df1 = pd.DataFrame()
+            st.session_state.df2 = pd.DataFrame()
+            st.session_state.fuzzy_results = pd.DataFrame()
+            st.session_state.filtered_results = pd.DataFrame()
+            st.session_state.duplicate_values = pd.DataFrame()
+            st.session_state.column_pairs = []
+            st.session_state.thresholds = {}
+            st.success("Files reset! Please upload new files.")    
+    
     df1_file = st.file_uploader("Upload Master Data File", type=['xlsx', 'csv'], key="upload1")
     df2_file = st.file_uploader("Upload New Data File", type=['xlsx', 'csv'], key="upload2")
+
+    
+        # File upload
+
 
     if df1_file is not None and df2_file is not None:
         # Load the data only if files have been uploaded and not already loaded
@@ -121,6 +130,8 @@ def render_fuzzy_lookup_page():
                     if key not in st.session_state.thresholds:
                         st.session_state.thresholds[key] = 80
 
+                
+
         # Ensure 'fuzzy_results' exists and is not empty before trying to use it
         if not st.session_state.fuzzy_results.empty:
             # Display Fuzzy Matching Results
@@ -138,9 +149,10 @@ def render_fuzzy_lookup_page():
                 # Update threshold in session state
                 st.session_state.thresholds[f"{col1}-{col2}"] = threshold
 
-            # Apply filtering based on all thresholds together
+          
+# Apply filtering based on all thresholds together
             filter_condition = True
-            duplicate_condition = True
+            duplicate_condition = False  # Initialize as False to check for at least one condition
 
             for col1, col2 in st.session_state.column_pairs:
                 similarity_col = f"{col1}-{col2} Similarity %"
@@ -149,13 +161,13 @@ def render_fuzzy_lookup_page():
                 # Filter rows where similarity is less than the threshold
                 filter_condition &= st.session_state.fuzzy_results[similarity_col] < threshold
 
-                # Identify rows where similarity is greater than or equal to the threshold (ALL conditions together)
-                duplicate_condition &= st.session_state.fuzzy_results[similarity_col] >= threshold
+                # Update duplicate condition to be True if any condition is satisfied
+                duplicate_condition |= st.session_state.fuzzy_results[similarity_col] >= threshold
 
             # Filtered dataframe (satisfying all conditions)
             st.session_state.filtered_results = st.session_state.fuzzy_results[filter_condition]
 
-            # Duplicate dataframe (where all similarities exceed the thresholds together)
+            # Duplicate dataframe (where at least one similarity exceeds the thresholds)
             st.session_state.duplicate_values = st.session_state.fuzzy_results[duplicate_condition]
 
             # Display filtered results
@@ -163,8 +175,9 @@ def render_fuzzy_lookup_page():
             st.write(st.session_state.filtered_results)
 
             # Display duplicate values
-            st.subheader("Duplicate Values (Rows exceeding all thresholds together)")
+            st.subheader("Duplicate Values (Rows exceeding at least one threshold)")
             st.write(st.session_state.duplicate_values)
+
 
             # Download Data as Excel File
             def download_as_excel():
