@@ -325,7 +325,7 @@ def fuzzy_match_columns(df1, df2, col1, col2):
     return similarity_scores, matched_values
 
 def render_fuzzy_lookup_page():   
-        
+    st.warning("Use this button after uploading a new files!" , icon="⚠️")       
     if st.button("Reset"):
         # Clear session state related to the uploaded files
             initialize_session_state()
@@ -336,6 +336,12 @@ def render_fuzzy_lookup_page():
             st.session_state.duplicate_values = pd.DataFrame()
             st.session_state.column_pairs = []
             st.session_state.thresholds = {}
+
+            for i in range(5):  # Adjust the range based on the maximum number of pairs allowed
+                if f"col1_{i}" in st.session_state:
+                    del st.session_state[f"col1_{i}"]
+                if f"col2_{i}" in st.session_state:
+                    del st.session_state[f"col2_{i}"]
             st.success("Files reset! Please upload new files.")    
     
     df1_file = st.file_uploader("Upload Master Data File", type=['xlsx', 'csv'], key="upload1")
@@ -364,7 +370,7 @@ def render_fuzzy_lookup_page():
             st.session_state.selected_sheet1 = st.selectbox("Select sheet from Master Data", st.session_state.sheet_names1)
             st.session_state.selected_sheet2 = st.selectbox("Select sheet from New Data", st.session_state.sheet_names2)
 
-            st.warning("Note: The sheet selection function is currently not working. We are working on it. First sheet will select by default!")
+            st.warning("Note: The sheet selection function is currently not working. We are working on it. First sheet will select by default!" , icon="⚠️")
             if df1_file.name.endswith('xlsx'):
                 st.session_state.df1 = pd.read_excel(df1_file, sheet_name=st.session_state.selected_sheet1)
             if df2_file.name.endswith('xlsx'):
