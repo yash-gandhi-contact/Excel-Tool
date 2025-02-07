@@ -23,18 +23,18 @@ def main():
     st.sidebar.title("Navigation")
     page_selection = st.sidebar.selectbox(
         "Select Page",
-        ["Update Entries", "Dynamic Excel Data Query", "Fuzzy Lookup", "Check and Replace"],  # Add "Check" to the list
+        ["Fuzzy Lookup","Update Entries", "Dynamic Excel Data Query", "Check and Replace"],  # Add "Check" to the list
         index=0
     )
-    if page_selection == "Dynamic Excel Data Query":
-        st.markdown("<h2 style='text-align: center;'>Dynamic Excel Data Query Dashboard</h2>", unsafe_allow_html=True)
-        render_data_query_dashboard()
+    if page_selection == "Fuzzy Lookup":  # Call the render function for the fuzzy lookup page
+        st.markdown("<h2 style='text-align: center;'>Fuzzy Lookup</h2>", unsafe_allow_html=True)
+        render_fuzzy_lookup_page()
     elif page_selection == "Update Entries":
         st.markdown("<h2 style='text-align: center;'>Update Entries</h2>", unsafe_allow_html=True)
         render_update_entries_page()
-    elif page_selection == "Fuzzy Lookup":  # Call the render function for the fuzzy lookup page
-        st.markdown("<h2 style='text-align: center;'>Fuzzy Lookup</h2>", unsafe_allow_html=True)
-        render_fuzzy_lookup_page()
+    elif page_selection == "Dynamic Excel Data Query":
+        st.markdown("<h2 style='text-align: center;'>Dynamic Excel Data Query Dashboard</h2>", unsafe_allow_html=True)
+        render_data_query_dashboard()
     elif page_selection == "Check and Replace":  # New empty Check page
         
         render_check_page()
