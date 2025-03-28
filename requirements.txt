@@ -6,5 +6,4 @@ fuzzywuzzy
 selenium
 bs4
 validators
-chromedriver-autoinstaller==0.3.1
-
+geckodriver-autoinstaller==0.30.0
