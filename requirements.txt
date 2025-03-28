@@ -6,4 +6,3 @@ fuzzywuzzy
 selenium
 bs4
 validators
-io
