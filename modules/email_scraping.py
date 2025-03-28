@@ -1,11 +1,14 @@
 import streamlit as st
 from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
 from bs4 import BeautifulSoup
 import pandas as pd
 import re
 import time
 import validators
 from io import BytesIO  # For in-memory file handling
+import chromedriver_autoinstaller
 
 # Function to extract email addresses from page content
 def extract_emails(soup):
@@ -14,7 +17,17 @@ def extract_emails(soup):
 
 # Function to scrape emails with user-provided keywords
 def scrape_emails_with_keywords(base_url, keywords, results_df):
-    driver = webdriver.Chrome()
+    # Automatically download and install the correct version of ChromeDriver
+    chromedriver_autoinstaller.install()
+
+    # Set up Chrome options for headless mode (no GUI)
+    chrome_options = Options()
+    chrome_options.add_argument('--headless')
+    chrome_options.add_argument('--no-sandbox')  # For restricted environments
+    chrome_options.add_argument('--disable-dev-shm-usage')  # To avoid certain issues in containers
+
+    # Initialize the WebDriver
+    driver = webdriver.Chrome(service=Service(chromedriver_autoinstaller.install()), options=chrome_options)
     contact_info = {'url': base_url, 'emails': []}
 
     try:
@@ -36,11 +49,14 @@ def scrape_emails_with_keywords(base_url, keywords, results_df):
         for link in keyword_links:
             contact_url = link if link.startswith("http") else base_url.rstrip("/") + "/" + link.lstrip("/")
             st.write(f"Visiting page: {contact_url}")
-            driver.get(contact_url)
-            time.sleep(2)
-            soup = BeautifulSoup(driver.page_source, 'html.parser')
-            page_emails = extract_emails(soup)
-            contact_info['emails'].extend(page_emails)
+            try:
+                driver.get(contact_url)
+                time.sleep(2)
+                soup = BeautifulSoup(driver.page_source, 'html.parser')
+                page_emails = extract_emails(soup)
+                contact_info['emails'].extend(page_emails)
+            except Exception as e:
+                st.write(f"Failed to load {contact_url}: {e}")
 
     except Exception as e:
         st.write(f"Error processing {base_url}: {e}")
