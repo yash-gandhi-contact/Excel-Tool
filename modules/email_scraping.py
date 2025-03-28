@@ -1,11 +1,11 @@
-import streamlit as st
-from selenium import webdriver
+import requests
 from bs4 import BeautifulSoup
 import pandas as pd
 import re
 import time
 import validators
 from io import BytesIO  # For in-memory file handling
+import streamlit as st
 
 # Function to extract email addresses from page content
 def extract_emails(soup):
@@ -14,14 +14,16 @@ def extract_emails(soup):
 
 # Function to scrape emails with user-provided keywords
 def scrape_emails_with_keywords(base_url, keywords, results_df):
-    driver = webdriver.Chrome()
     contact_info = {'url': base_url, 'emails': []}
 
     try:
         st.write(f"Visiting main page: {base_url}")
-        driver.get(base_url)
-        time.sleep(2)  # Allow page to load
-        soup = BeautifulSoup(driver.page_source, 'html.parser')
+        response = requests.get(base_url)
+        if response.status_code != 200:
+            st.write(f"Failed to fetch {base_url}. Status Code: {response.status_code}")
+            return results_df
+
+        soup = BeautifulSoup(response.text, 'html.parser')
 
         # Extract emails from the homepage
         homepage_emails = extract_emails(soup)
@@ -33,19 +35,21 @@ def scrape_emails_with_keywords(base_url, keywords, results_df):
             if any(keyword in a_tag.text.lower() or keyword in a_tag['href'].lower() for keyword in keywords):
                 keyword_links.append(a_tag['href'])
 
+        # Scrape emails from pages that match the keywords
         for link in keyword_links:
             contact_url = link if link.startswith("http") else base_url.rstrip("/") + "/" + link.lstrip("/")
             st.write(f"Visiting page: {contact_url}")
-            driver.get(contact_url)
-            time.sleep(2)
-            soup = BeautifulSoup(driver.page_source, 'html.parser')
+            response = requests.get(contact_url)
+            if response.status_code != 200:
+                st.write(f"Failed to fetch {contact_url}. Status Code: {response.status_code}")
+                continue
+
+            soup = BeautifulSoup(response.text, 'html.parser')
             page_emails = extract_emails(soup)
             contact_info['emails'].extend(page_emails)
 
     except Exception as e:
         st.write(f"Error processing {base_url}: {e}")
-    finally:
-        driver.quit()
 
     # Limit emails to a maximum of 5 and convert list to a comma-separated string
     contact_info['emails'] = ', '.join(list(set(contact_info['emails']))[:5])
