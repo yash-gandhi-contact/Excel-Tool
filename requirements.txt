@@ -6,6 +6,4 @@ fuzzywuzzy
 selenium
 bs4
 validators
-chromium-browser
-chromium-chromedriver
 
