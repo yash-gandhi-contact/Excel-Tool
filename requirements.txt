@@ -6,4 +6,5 @@ fuzzywuzzy
 selenium
 bs4
 validators
+chromedriver-autoinstaller==0.3.1
 
