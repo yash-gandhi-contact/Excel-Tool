@@ -1,12 +1,17 @@
 import streamlit as st
 from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.firefox.options import Options
+from selenium.webdriver.firefox.service import Service
+import geckodriver_autoinstaller
 from bs4 import BeautifulSoup
 import pandas as pd
 import re
 import time
 import validators
 from io import BytesIO
+
+# Auto-install Geckodriver if not already installed
+geckodriver_autoinstaller.install()
 
 # Function to extract email addresses from page content
 def extract_emails(soup):
@@ -15,12 +20,15 @@ def extract_emails(soup):
 
 # Function to scrape emails with user-provided keywords
 def scrape_emails_with_keywords(base_url, keywords, results_df):
-    # Configure headless Chrome
+    # Configure headless Firefox
     options = Options()
     options.add_argument("--headless")  # Run in headless mode
     options.add_argument("--no-sandbox")  # To ensure the process doesn't fail on Linux systems
     options.add_argument("--disable-dev-shm-usage")  # For environments with limited resources
-    driver = webdriver.Chrome(options=options)
+    
+    # Setup Geckodriver with Firefox
+    service = Service(executable_path="geckodriver")
+    driver = webdriver.Firefox(service=service, options=options)
 
     contact_info = {'url': base_url, 'emails': []}
 
@@ -94,7 +102,7 @@ def render_email_scraping_page():
         if st.button('Start Scraping'):
             # Process each URL and update results in real-time
             for company_url in company_urls:
-                if company_url.startswith("www."):
+                if company_url.startswith("www.") :
                     company_url = "http://" + company_url  # Prepend protocol if missing
 
                 if not validators.url(company_url):
