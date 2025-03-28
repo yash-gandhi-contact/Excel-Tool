@@ -3,7 +3,8 @@ pandas
 openpyxl
 xlsxwriter
 fuzzywuzzy
-selenium
+beautifulsoup4
 bs4
 validators
+requests
 
