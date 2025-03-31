@@ -6,6 +6,7 @@ from modules.html_scraping import render_html_scraping_page
 from modules.email_scraping import render_email_scraping_page
 from utils.ui_utils import set_logo_and_links
 from modules.check_page import render_check_page
+from modules.python_html_scraping import render_python_html_scraping_page
 
 import sys
 import os
@@ -61,8 +62,8 @@ def main():
 
         page_selection = st.sidebar.selectbox(
             "Function",
-            ["Fuzzy Lookup", "Update Excel Entries", "Dynamic Excel Data Query", "Check and Replace", "HTML Scraping", "Email Scraping"],
-            index=5
+            ["HTML Scraping", "Email Scraping", "Python HTML Scraping", "Fuzzy Lookup", "Update Excel Entries", "Dynamic Excel Data Query", "Check and Replace"],
+            index=0
         )
 
         if page_selection == "Fuzzy Lookup":
@@ -80,6 +81,9 @@ def main():
             render_html_scraping_page()
         elif page_selection == "Email Scraping":
             render_email_scraping_page()
+        elif page_selection == "Python HTML Scraping":
+            st.markdown("<h2 style='text-align: center;'>Python HTML Scraping</h2>", unsafe_allow_html=True)
+            render_python_html_scraping_page()
         
         # Add support text at the bottom
         st.sidebar.markdown("---")
