@@ -168,14 +168,13 @@
 #             # Provide download link
 #             csv = df_scraped.to_csv(index=False).encode('utf-8')
 #             st.download_button("Download CSV", csv, "scraped_data.csv", "text/csv", key="download_csv")
-
 import streamlit as st
 import pandas as pd
 import requests
 from bs4 import BeautifulSoup
 
 
-def scrape_product_data_from_urls(uploaded_file, tag_attr_class_pairs, column_names, child_elements=None):
+def scrape_product_data_from_urls(uploaded_file, tag_attr_class_pairs, column_names, child_elements_list):
     """
     A dynamic scraping function that supports flexible extraction of text content 
     based on tags, attributes, and classes, with optional child tag extraction.
@@ -184,7 +183,7 @@ def scrape_product_data_from_urls(uploaded_file, tag_attr_class_pairs, column_na
     - uploaded_file: Uploaded Excel file with a list of URLs.
     - tag_attr_class_pairs: List of tuples (tag, attribute, class_name).
     - column_names: List of column names for the output.
-    - child_elements: Optional. List of child tags to extract text from.
+    - child_elements_list: List of child tags to extract text from for each set.
 
     Returns:
     - DataFrame with scraped data.
@@ -220,10 +219,10 @@ def scrape_product_data_from_urls(uploaded_file, tag_attr_class_pairs, column_na
                     extracted_text = []
                     for element in elements:
                         # If child elements are specified, extract only from them
-                        if child_elements:
+                        if child_elements_list and child_elements_list[idx]:
                             child_texts = [
                                 child.text.strip()
-                                for child_tag in child_elements
+                                for child_tag in child_elements_list[idx]
                                 for child in element.find_all(child_tag)
                                 if child.text.strip()
                             ]
@@ -256,6 +255,7 @@ def render_python_html_scraping_page():
         st.session_state.uploaded_file = None
         st.session_state.tag_attr_class_pairs = []
         st.session_state.column_names = []
+        st.session_state.child_elements_list = []
 
     uploaded_file = st.file_uploader("Upload an Excel file containing URLs", type=["xlsx"])
 
@@ -268,30 +268,35 @@ def render_python_html_scraping_page():
 
     tag_attr_class_pairs = []
     column_names = []
+    child_elements_list = []
 
     for i in range(num_sets):
         st.write(f"### Set {i + 1}")
 
-        tag = st.text_input(f"Tag {i + 1} (e.g., h1, div, span, li)", value="h1")
-        attribute = st.text_input(f"Attribute {i + 1} (e.g., class, id, name)", value="class")
-        class_name = st.text_input(f"Class/ID Name {i + 1} (optional)", value="")
+        tag = st.text_input(f"Tag {i + 1} (e.g., h1, div, span, li)", value="h1", key=f"tag_{i}")
+        attribute = st.text_input(f"Attribute {i + 1} (e.g., class, id, name)", value="class", key=f"attribute_{i}")
+        class_name = st.text_input(f"Class/ID Name {i + 1} (optional)", value="", key=f"class_name_{i}")
         tag_attr_class_pairs.append((tag, attribute, class_name))
 
-        column_name = st.text_input(f"Column Name for Set {i + 1} (e.g., Product Title, Price)", value=f"Set {i + 1}")
+        column_name = st.text_input(f"Column Name for Set {i + 1} (e.g., Product Title, Price)", value=f"Set {i + 1}", key=f"column_name_{i}")
         column_names.append(column_name)
 
-    st.write("### Optional Child Tags")
-    child_elements = st.multiselect(
-        "Specify child tags for extraction (leave blank for all text within the main tag)",
-        options=["th", "td", "span", "div", "p", "h3", "li"],
-    )
+        # Optional child tags for this set
+        child_elements = st.multiselect(
+            f"Specify child tags for extraction for Set {i + 1} (leave blank for all text within the main tag)",
+            options=["th", "td", "span", "div", "p", "h3", "li"],
+            key=f"child_elements_{i}"
+        )
+        child_elements_list.append(child_elements)
 
+    # Save all session state values
     st.session_state.tag_attr_class_pairs = tag_attr_class_pairs
     st.session_state.column_names = column_names
+    st.session_state.child_elements_list = child_elements_list
 
     if uploaded_file and st.button("Start Scraping"):
         df_scraped = scrape_product_data_from_urls(
-            uploaded_file, tag_attr_class_pairs, column_names, child_elements
+            uploaded_file, tag_attr_class_pairs, column_names, st.session_state.child_elements_list
         )
 
         if not df_scraped.empty:
@@ -304,3 +309,4 @@ def render_python_html_scraping_page():
 
 if __name__ == "__main__":
     render_python_html_scraping_page()
+
