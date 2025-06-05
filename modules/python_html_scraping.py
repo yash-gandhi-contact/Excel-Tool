@@ -283,11 +283,7 @@ def render_python_html_scraping_page():
     st.write("### Optional Child Tags")
     child_elements = st.multiselect(
         "Specify child tags for extraction (leave blank for all text within the main tag)",
-<<<<<<< HEAD
-        options=["th", "td", "span", "div", "p", "h3", "li", "ui"],
-=======
         options=["th", "td", "span", "div", "p", "h3", "li"],
->>>>>>> 
     )
 
     st.session_state.tag_attr_class_pairs = tag_attr_class_pairs
@@ -308,11 +304,3 @@ def render_python_html_scraping_page():
 
 if __name__ == "__main__":
     render_python_html_scraping_page()
-<<<<<<< HEAD
-
-
-
-
-
-=======
->>>>>>> 5c38d1321a0feebbb77cb4461de0e598dc5288df
