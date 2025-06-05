@@ -287,7 +287,7 @@ def render_python_html_scraping_page():
         options=["th", "td", "span", "div", "p", "h3", "li", "ui"],
 =======
         options=["th", "td", "span", "div", "p", "h3", "li"],
->>>>>>> 5c38d1321a0feebbb77cb4461de0e598dc5288df
+>>>>>>> 
     )
 
     st.session_state.tag_attr_class_pairs = tag_attr_class_pairs
