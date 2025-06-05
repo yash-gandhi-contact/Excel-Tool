@@ -111,17 +111,6 @@ def render_fuzzy_lookup_page():
             st.session_state.df1 = reload_sheet_data(df1_file, None, is_excel=False)
             st.session_state.df2 = reload_sheet_data(df2_file, None, is_excel=False)
 
-        # if df2_file.name.endswith('xlsx'):
-        #     all_sheets2 = pd.ExcelFile(df2_file).sheet_names
-        #     st.session_state.selected_sheet2 = st.selectbox(
-        #         "Select Sheet for File 2",
-        #         all_sheets2,
-        #         key="sheet_selector_2"
-        #     )
-        #     st.session_state.df2 = reload_sheet_data(df2_file, st.session_state.selected_sheet2, is_excel=True)
-        # else:
-        #     st.session_state.df2 = reload_sheet_data(df2_file, None, is_excel=False)
-
         
     
     if not st.session_state.df1.empty and not st.session_state.df2.empty:
@@ -254,34 +243,6 @@ def render_fuzzy_lookup_page():
 
                 st.subheader("Duplicate Values")
                 st.write(st.session_state.duplicate_values)
-
-            # if not st.session_state.fuzzy_results.empty:
-            #     st.write("Fuzzy Matching Results")
-            #     st.write(st.session_state.fuzzy_results)
-
-            #     for col1, col2 in st.session_state.column_pairs:
-            #         st.subheader(f"Filter Results by Similarity % for {col1}-{col2}")
-            #         similarity_col = f"{col1}-{col2} Similarity %"
-            #         threshold = st.slider(f"Set similarity threshold for {col1}-{col2}", 0, 100, st.session_state.thresholds.get(f"{col1}-{col2}", 80), key=f"threshold_{col1}_{col2}")
-            #         st.session_state.thresholds[f"{col1}-{col2}"] = threshold
-
-            #     filter_condition = True
-            #     duplicate_condition = False
-
-            #     for col1, col2 in st.session_state.column_pairs:
-            #         similarity_col = f"{col1}-{col2} Similarity %"
-            #         threshold = st.session_state.thresholds[f"{col1}-{col2}"]
-            #         filter_condition &= st.session_state.fuzzy_results[similarity_col] < threshold
-            #         duplicate_condition |= st.session_state.fuzzy_results[similarity_col] >= threshold
-
-            #     st.session_state.filtered_results = st.session_state.fuzzy_results[filter_condition]
-            #     st.session_state.duplicate_values = st.session_state.fuzzy_results[duplicate_condition]
-
-            #     st.subheader("Filtered Results (Rows meeting all thresholds)")
-            #     st.write(st.session_state.filtered_results)
-
-            #    st.subheader("Duplicate Values (Rows exceeding at least one threshold)")
-            #    st.write(st.session_state.duplicate_values)
 
 
             if not st.session_state.df1.empty and not st.session_state.df2.empty:
