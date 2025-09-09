@@ -8,6 +8,7 @@ from utils.ui_utils import set_logo_and_links
 from modules.check_page import render_check_page
 from modules.python_html_scraping import render_python_html_scraping_page
 from modules.python_html_scraping_2 import render_python_html_scraping_page_2
+from modules.webpage_finder import render_webpage_finder_page   # ✅ NEW IMPORT
 
 import sys
 import os
@@ -63,7 +64,17 @@ def main():
 
         page_selection = st.sidebar.selectbox(
             "Function",
-            ["HTML Scraping", "Email Scraping", "Python HTML Scraping", "Fuzzy Lookup", "Update Excel Entries", "Dynamic Excel Data Query", "Check and Replace", "Python HTML Scraping Testing"],
+            [
+                "HTML Scraping",
+                "Email Scraping",
+                "Python HTML Scraping",
+                "Fuzzy Lookup",
+                "Update Excel Entries",
+                "Dynamic Excel Data Query",
+                "Check and Replace",
+                "Python HTML Scraping Testing",
+                "Webpage Finder"   # ✅ NEW PAGE ADDED
+            ],
             index=0
         )
 
@@ -88,6 +99,9 @@ def main():
         elif page_selection == "Python HTML Scraping Testing":
             st.markdown("<h2 style='text-align: center;'>Python HTML Scraping Testing</h2>", unsafe_allow_html=True)
             render_python_html_scraping_page_2()
+        elif page_selection == "Webpage Finder":   # ✅ NEW HANDLER
+            st.markdown("<h2 style='text-align: center;'>Webpage Finder</h2>", unsafe_allow_html=True)
+            render_webpage_finder_page()
 
         # Add support text at the bottom
         st.sidebar.markdown("---")
@@ -95,7 +109,8 @@ def main():
             """
             <p style='text-align: center; font-size: 14px;'>
             Facing any problems or need support? 
-            Contact : Yash Gandhi - y.gandhi@eupd-research.com         </p>
+            Contact : Yash Gandhi - y.gandhi@eupd-research.com
+            </p>
             """,
             unsafe_allow_html=True
         )
