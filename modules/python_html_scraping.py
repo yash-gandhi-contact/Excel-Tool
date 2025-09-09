@@ -303,8 +303,4 @@ def render_python_html_scraping_page():
 
 
 if __name__ == "__main__":
-<<<<<<< HEAD
     render_python_html_scraping_page()
-=======
-    render_python_html_scraping_page()
->>>>>>> 760b07f1d0683ecac90a908b09aefb06bd97bea4
